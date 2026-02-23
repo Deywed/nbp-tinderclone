@@ -30,6 +30,7 @@ class AppRouter {
           return ProfileCreationScreen(user: user);
         },
       ),
+
       GoRoute(
         path: '/orientation-screen',
         builder: (context, state) => OrientationScreen(),

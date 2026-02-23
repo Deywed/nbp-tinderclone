@@ -2,17 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Backend.Enum;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Backend.Models
 {
-    public enum UserGender
-    {
-        Male,
-        Female,
-        Other
-    }
 
     public class User
     {
@@ -25,8 +20,7 @@ namespace Backend.Models
         public string LastName { get; set; } = string.Empty;
         public int Age { get; set; }
         public string Bio { get; set; } = string.Empty;
-        public List<string> ImageUrls { get; set; } = new List<string>();
         public UserPreferences UserPreferences { get; set; } = new UserPreferences();
-        public UserGender Gender { get; set; }
+        public GenderEnum Gender { get; set; }
     }
 }

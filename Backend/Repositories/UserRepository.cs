@@ -2,26 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Backend.Services.Interfaces;
+using Backend.DTOs.User;
 using Backend.Models;
+using Backend.Repositories.Interfaces;
 using MongoDB.Driver;
 
-namespace Backend.Services
+namespace Backend.Repositories
 {
-    public class MongoUserService : IUserService
+    public class UserRepository : IUserRepository
     {
         private readonly IMongoCollection<User> _users;
-        private readonly ICacheService _cacheService;
-
-        public MongoUserService(IMongoClient client, ICacheService cacheService)
+        public UserRepository(IMongoDatabase database)
         {
-            var database = client.GetDatabase("TinderDb");
             _users = database.GetCollection<User>("Users");
-            _cacheService = cacheService;
         }
         public Task CreateUserAsync(User user)
         {
-            _cacheService.SetUserOnlineAsync(user.Id);
             return _users.InsertOneAsync(user);
         }
 
@@ -29,6 +25,7 @@ namespace Backend.Services
         {
             return _users.DeleteOneAsync(u => u.Id == id.ToString());
         }
+
         public Task<List<User>> GetAllUsersAsync()
         {
             return _users.Find(_ => true).ToListAsync();
@@ -43,6 +40,7 @@ namespace Backend.Services
         {
             return _users.Find(u => u.Id == id.ToString()).FirstOrDefaultAsync();
         }
+
         public Task<List<User>> GetUsersByPreferencesAsync(User user)
         {
             var builder = Builders<User>.Filter;
@@ -51,16 +49,19 @@ namespace Backend.Services
                 builder.Ne(u => u.Id, user.Id),
                 builder.Gte(u => u.Age, user.UserPreferences.MinAgePref),
                 builder.Lte(u => u.Age, user.UserPreferences.MaxAgePref),
-                builder.Eq(u => u.Gender.ToString(), user.UserPreferences.InterestedIn)
+                builder.Eq(u => u.Gender, user.UserPreferences.InterestedIn)
             );
-
             return _users.Find(filter).ToListAsync();
+        }
+
+        public Task<List<User>> GetUsersByGender(User user)
+        {
+            return _users.Find(u => u.Gender == user.Gender).ToListAsync();
         }
 
         public Task UpdateUserAsync(User user)
         {
-            _cacheService.SetUserOnlineAsync(user.Id);
-            return _users.ReplaceOneAsync(u => u.Id == user.Id, user);
+            return _users.ReplaceOneAsync(u => u.Id == user.Id.ToString(), user);
         }
     }
 }
