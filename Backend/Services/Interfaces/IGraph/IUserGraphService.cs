@@ -1,0 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Backend.Services.Interfaces
+{
+    public interface IUserGraphService
+    {
+        Task RegisterUserAsync(string userId);
+        Task SetUserInterestsAsync(string userId, List<string> interests);
+    }
+}

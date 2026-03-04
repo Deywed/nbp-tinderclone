@@ -9,12 +9,15 @@ namespace Backend.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<User> GetUserByIdAsync(Guid id);
+        Task<User> GetUserByIdAsync(string id);
         Task<User> GetUserByEmailAsync(string email);
         Task CreateUserAsync(CreateUserDTO user);
-        Task UpdateUserAsync(UpdateUserDTO user);
-        Task DeleteUserAsync(Guid id);
+        Task UpdateUserAsync(UpdateUserDTO user, string id);
+        Task DeleteUserAsync(string id);
         Task<List<User>> GetAllUsersAsync();
+        Task<List<User>> GetUsersByIdsAsync(List<string> ids);
         Task<List<User>> GetUsersByPreferencesAsync(User user);
+        Task UpdateLocationAsync(string userId, double lat, double lon);
+
     }
 }

@@ -1,0 +1,8 @@
+[*.cs]
+# Traži da sve async metode imaju "Async" u nazivu
+dotnet_naming_rule.async_methods_must_be_pascal_case.symbols = async_methods
+dotnet_naming_symbols.async_methods.applicable_kinds = method
+dotnet_naming_symbols.async_methods.required_modifiers = async
+
+# Javlja grešku ako Task nije await-ovan
+dotnet_diagnostic.CS4014.severity = error

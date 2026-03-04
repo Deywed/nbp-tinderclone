@@ -45,5 +45,14 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>TinderClone treba tvoju lokaciju da ti pronađe parove u blizini.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>TinderClone prati lokaciju da bi ostao vidljiv drugima.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

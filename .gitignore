@@ -1,0 +1,23 @@
+# Docker data volumes
+docker-data/
+
+# .NET
+Backend/bin/
+Backend/obj/
+Backend/*.user
+Backend/.vs/
+
+# Flutter
+Frontend/.dart_tool/
+Frontend/build/
+Frontend/.flutter-plugins
+Frontend/.flutter-plugins-dependencies
+Frontend/pubspec.lock
+
+# Environment / secrets
+*.env
+.env.*
+appsettings.Development.json
+
+# macOS
+.DS_Store

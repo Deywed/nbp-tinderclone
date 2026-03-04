@@ -11,10 +11,10 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         Exception exception,
         CancellationToken cancellationToken)
     {
-        // 1. Logujemo samo najbitnije
+
         logger.LogError(exception, "Error: {Message}", exception.Message);
 
-        // 2. Određujemo status kod
+
         var statusCode = exception switch
         {
             MongoDB.Driver.MongoWriteException ex when ex.WriteError.Category == MongoDB.Driver.ServerErrorCategory.DuplicateKey
@@ -25,7 +25,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             _ => HttpStatusCode.InternalServerError
         };
 
-        // 3. Kreiramo standardni ProblemDetails (ugrađen u .NET)
+
         var problemDetails = new ProblemDetails
         {
             Status = (int)statusCode,
@@ -34,7 +34,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             Instance = $"{httpContext.Request.Method} {httpContext.Request.Path}"
         };
 
-        // 4. Slanje odgovora
+
         httpContext.Response.StatusCode = problemDetails.Status.Value;
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 

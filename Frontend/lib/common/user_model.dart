@@ -1,4 +1,5 @@
 import 'package:tinderclone/common/user_preferences_model.dart';
+import 'package:tinderclone/common/user_gender.dart';
 
 class UserModel {
   final String? id;
@@ -11,6 +12,7 @@ class UserModel {
   final List<String>? imageUrls;
   final UserPreferences? userPreferences;
   final UserGender? gender;
+  final List<String>? interests;
 
   UserModel({
     this.id,
@@ -23,6 +25,7 @@ class UserModel {
     this.imageUrls,
     this.userPreferences,
     this.gender,
+    this.interests,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -35,8 +38,12 @@ class UserModel {
       age: json['age'] ?? 0,
       bio: json['bio'] ?? '',
       imageUrls: List<String>.from(json['imageUrls'] ?? []),
-      userPreferences: UserPreferences.fromJson(json['userPreferences']),
-      gender: userGenderFromString(json['gender']),
+      userPreferences:
+          json['userPreferences'] != null
+              ? UserPreferences.fromJson(json['userPreferences'])
+              : null,
+      gender: userGenderFromDynamic(json['gender']),
+      interests: List<String>.from(json['interests'] ?? []),
     );
   }
 
@@ -51,7 +58,8 @@ class UserModel {
       'bio': bio,
       'imageUrls': imageUrls,
       'userPreferences': userPreferences?.toJson(),
-      'gender': userGenderToString(gender!),
+      'gender': (gender ?? UserGender.other).index,
+      'interests': interests ?? [],
     };
   }
 
@@ -66,6 +74,7 @@ class UserModel {
     List<String>? imageUrls,
     UserPreferences? userPreferences,
     UserGender? gender,
+    List<String>? interests,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -78,23 +87,7 @@ class UserModel {
       imageUrls: imageUrls ?? this.imageUrls,
       userPreferences: userPreferences ?? this.userPreferences,
       gender: gender ?? this.gender,
+      interests: interests ?? this.interests,
     );
   }
-}
-
-enum UserGender { male, female, other }
-
-UserGender userGenderFromString(String value) {
-  switch (value.toLowerCase()) {
-    case 'male':
-      return UserGender.male;
-    case 'female':
-      return UserGender.female;
-    default:
-      return UserGender.other;
-  }
-}
-
-String userGenderToString(UserGender gender) {
-  return gender.toString().split('.').last;
 }

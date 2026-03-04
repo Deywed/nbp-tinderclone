@@ -1,7 +1,9 @@
+import 'package:tinderclone/common/user_gender.dart';
+
 class UserPreferences {
   final int minAgePref;
   final int maxAgePref;
-  final String interestedIn;
+  final UserGender interestedIn;
 
   UserPreferences({
     required this.minAgePref,
@@ -13,7 +15,7 @@ class UserPreferences {
     return UserPreferences(
       minAgePref: json['minAgePref'],
       maxAgePref: json['maxAgePref'],
-      interestedIn: json['interestedIn'] ?? '',
+      interestedIn: userGenderFromDynamic(json['interestedIn']),
     );
   }
 
@@ -21,7 +23,7 @@ class UserPreferences {
     return {
       'minAgePref': minAgePref,
       'maxAgePref': maxAgePref,
-      'interestedIn': interestedIn,
+      'interestedIn': interestedIn.index,
     };
   }
 }

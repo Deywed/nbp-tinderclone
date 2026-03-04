@@ -11,10 +11,15 @@ namespace Backend.Controllers
     [Route("api/[controller]")]
     public class SwipeController : ControllerBase
     {
+        private readonly IMatchService _matchService;
         private readonly ISwipeService _swipeService;
-        public SwipeController(ISwipeService swipeService)
+        private readonly IUserService _userService;
+
+        public SwipeController(IMatchService matchService, ISwipeService swipeService, IUserGraphService userGraphService, IUserService userService)
         {
+            _matchService = matchService;
             _swipeService = swipeService;
+            _userService = userService;
         }
 
         [HttpPost("Like")]
@@ -37,13 +42,23 @@ namespace Backend.Controllers
         [HttpGet("Matches/{userId}")]
         public async Task<IActionResult> GetMatches(string userId)
         {
-            var matches = await _swipeService.GetMatchesByUserIdAsync(userId);
-            return Ok(matches);
+            var matchedIds = await _matchService.GetMatchesForUserAsync(userId);
+
+            Console.WriteLine($"[GetMatches] userId={userId} → Neo4j returned {matchedIds.Count} IDs: [{string.Join(", ", matchedIds)}]");
+
+            if (matchedIds.Count == 0)
+                return Ok(new List<object>());
+
+            var profiles = await _userService.GetUsersByIdsAsync(matchedIds);
+
+            Console.WriteLine($"[GetMatches] MongoDB returned {profiles.Count} profiles");
+
+            return Ok(profiles);
         }
         [HttpDelete("RemoveMatch")]
         public async Task<IActionResult> RemoveMatch(string userId, string matchedUserId)
         {
-            await _swipeService.RemoveMatchAsync(userId, matchedUserId);
+            await _matchService.RemoveMatchAsync(userId, matchedUserId);
             return Ok("Match removed successfully");
         }
         [HttpPut("Block")]
@@ -52,5 +67,6 @@ namespace Backend.Controllers
             await _swipeService.BlockUserAsync(userId, blockedUserId);
             return Ok("User blocked successfully");
         }
+
     }
 }

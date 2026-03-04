@@ -22,5 +22,13 @@ namespace Backend.Models
         public string Bio { get; set; } = string.Empty;
         public UserPreferences UserPreferences { get; set; } = new UserPreferences();
         public GenderEnum Gender { get; set; }
+        public List<string>? Interests { get; set; }
+        public UserLocation? LastLocation { get; set; }
     }
+}
+
+public class UserLocation
+{
+    public string Type { get; set; } = "Point";
+    public List<double> Coordinates { get; set; } = new List<double>();
 }

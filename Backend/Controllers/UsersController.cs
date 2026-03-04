@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Backend.DTOs.User;
 using Backend.Models;
 using Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -22,15 +23,12 @@ namespace Backend.Controllers
         }
 
         [HttpPost("CreateUser")]
-        public async Task<IActionResult> CreateUser([FromBody] User user)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDTO user)
         {
-            user.Id = ObjectId.GenerateNewId().ToString();
-
             await _mongoUserService.CreateUserAsync(user);
             return Ok(user);
         }
 
-        [Authorize]
         [HttpGet("GetAllUsers")]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -38,7 +36,7 @@ namespace Backend.Controllers
             return Ok(users);
         }
         [HttpGet("GetUser/{id}")]
-        public async Task<IActionResult> GetUser(Guid id)
+        public async Task<IActionResult> GetUser(string id)
         {
             var user = await _mongoUserService.GetUserByIdAsync(id);
             if (user == null)
@@ -47,18 +45,19 @@ namespace Backend.Controllers
         }
 
         [HttpPut("UpdateUser/{id}")]
-        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] User updatedUser)
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDTO updatedUser)
         {
             var existingUser = await _mongoUserService.GetUserByIdAsync(id);
             if (existingUser == null)
                 return NotFound();
 
-            updatedUser.Id = id.ToString();
-            await _mongoUserService.UpdateUserAsync(updatedUser);
-            return Ok(updatedUser);
+            await _mongoUserService.UpdateUserAsync(updatedUser, id);
+
+            var savedUser = await _mongoUserService.GetUserByIdAsync(id);
+            return Ok(savedUser);
         }
         [HttpDelete("DeleteUser/{id}")]
-        public async Task<IActionResult> DeleteUser(Guid id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
             var existingUser = await _mongoUserService.GetUserByIdAsync(id);
             if (existingUser == null)
@@ -67,8 +66,9 @@ namespace Backend.Controllers
             await _mongoUserService.DeleteUserAsync(id);
             return NoContent();
         }
+
         [HttpGet("GetUserByEmail")]
-        public async Task<IActionResult> GetUserByEmail([FromQuery] string email)
+        public async Task<IActionResult> GetUserByEmail([FromBody] string email)
         {
             var user = await _mongoUserService.GetUserByEmailAsync(email);
             if (user == null)

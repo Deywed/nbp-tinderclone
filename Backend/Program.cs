@@ -1,8 +1,11 @@
 using System.Text;
 using Backend.Hubs;
+using Backend.Repositories;
+using Backend.Repositories.Interfaces;
 using Backend.Services;
+using Backend.Services.GraphServices;
 using Backend.Services.Interfaces;
-using Backend.Services.Neo4J;
+using Backend.Services.CollectionServices;
 using Backend.Services.Redis;
 using casino_editor.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -15,136 +18,122 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- SERVISI ---
+// SERVISI
 
-// 1. Dodaj kontrolere
 builder.Services.AddControllers();
-
-// 2. Swagger/OpenAPI - KORISTI SAMO OVO ZA SWAGGER UI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Moj API", Version = "v1" });
 
-    // Definisanje Security šeme
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "Unesi token ovako: Bearer {tvoj_token}",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
-
-// 3. Baze
+//BAZE
 
 //MongoDB
-var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb");
-builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
+var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
+var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 
-//NEO4j
-var neo4jUri = builder.Configuration.GetConnectionString("Neo4j");
+
+var mongoClient = new MongoClient(mongoConnectionString);
+builder.Services.AddSingleton<IMongoClient>(mongoClient);
+builder.Services.AddScoped<IMongoDatabase>(sp =>
+    sp.GetRequiredService<IMongoClient>().GetDatabase(mongoDatabaseName));
+
+
+// NEO4J
+var neo4jUri = builder.Configuration["Neo4jSettings:Uri"];
 var neo4jUser = builder.Configuration["Neo4jSettings:User"];
 var neo4jPass = builder.Configuration["Neo4jSettings:Password"];
+
+//singleton
 builder.Services.AddSingleton(GraphDatabase.Driver(neo4jUri, AuthTokens.Basic(neo4jUser, neo4jPass)));
 
-var redisConnectionString = builder.Configuration.GetSection("Redis:ConnectionString").Value;
 
-// Registracija ConnectionMultiplexer-a kao Singleton (to je preporuka za Redis)
+// REDIS
+var redisConnectionString = builder.Configuration["RedisSettings:ConnectionString"];
+
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     ConnectionMultiplexer.Connect(redisConnectionString!));
 
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
 
+//REPOZITORIJUMI I SERVISI
 
-// 4. Servsi
+builder.Services.AddScoped<IUserRepository, MongoUserRepository>();
+builder.Services.AddScoped<INeo4JRepository, Neo4Repository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<ISwipeService, Neo4JService>();
 builder.Services.AddScoped<ICacheService, RedisService>();
+builder.Services.AddScoped<IDiscoveryService, DiscoveryService>();
+builder.Services.AddScoped<IUserGraphService, UserGraphService>();
+builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<ISwipeService, SwipeService>();
+builder.Services.AddScoped<IStatsService, StatsService>();
 
+builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddSignalR();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+builder.Services.AddOpenApi("v1");
 
-// 2. Podesi CORS (MORAŠ dozvoliti Credentials zbog SignalR-a)
+
+//CORS
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFlutter", policy =>
     {
-        policy.WithOrigins("http://localhost:XXXXX") // Port tvog Fluttera
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); // Obavezno za SignalR!
+              .AllowCredentials();
     });
 });
 
-// 5. JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-// Konfiguracija JWT
 .AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidateAudience = true,
-        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(
-        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key nije pronađen u konfiguraciji"))),
+            Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"] ?? throw new InvalidOperationException("JWT Key nedostaje")))
     };
 });
 
 
 
-
-
 var app = builder.Build();
 
-// --- MIDDLEWARE ---
+//MIDDLEWARE
 
 if (app.Environment.IsDevelopment())
 {
-
     app.MapOpenApi();
+
     app.MapScalarApiReference(options =>
     {
-        options.WithTitle("Casino Editor API")
+        options.WithTitle("Tinder Clone API")
                .WithTheme(ScalarTheme.DeepSpace)
                .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+        options.OpenApiRoutePattern = "/openapi/v1.json";
     });
 }
-app.UseCors("AllowFlutter");
+app.MapGet("/", () => Results.Redirect("/scalar/v1", permanent: false));
+app.UseExceptionHandler();
 
-// 3. Mapiraj rutu za Hub
-app.MapHub<MatchHub>("/matchHub");
 app.UseRouting();
+app.UseCors("AllowFlutter");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
-app.UseExceptionHandler();
+app.MapHub<MatchHub>("/matchHub").RequireCors("AllowFlutter");
 
 app.Run();

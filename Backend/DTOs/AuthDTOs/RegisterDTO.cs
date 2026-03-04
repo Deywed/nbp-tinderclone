@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Backend.Enum;
 using Backend.Models;
 
 namespace Backend.DTOs.AuthDTOs
@@ -31,7 +32,7 @@ namespace Backend.DTOs.AuthDTOs
         string Bio,
 
         [Required]
-        UserGender Gender,
+        GenderEnum Gender,
 
         [Required]
         int MinAgePref,
@@ -40,6 +41,6 @@ namespace Backend.DTOs.AuthDTOs
         int MaxAgePref,
 
         [Required]
-        string InterestedIn
+        GenderEnum InterestedIn
     );
 }

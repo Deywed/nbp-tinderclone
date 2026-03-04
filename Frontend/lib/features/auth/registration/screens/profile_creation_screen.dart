@@ -15,6 +15,8 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
   final TextEditingController ageController = TextEditingController();
   final TextEditingController bioController = TextEditingController();
 
+  UserModel get _currentUser => widget.user ?? UserModel();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,6 +80,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
               const SizedBox(height: 40),
 
               TextField(
+                autocorrect: false,
                 controller: nameController,
                 decoration: InputDecoration(
                   labelText: "Full Name",
@@ -89,6 +92,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
               const SizedBox(height: 16),
 
               TextField(
+                autocorrect: false,
                 controller: ageController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
@@ -101,6 +105,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
               const SizedBox(height: 16),
 
               TextField(
+                autocorrect: false,
                 controller: bioController,
                 maxLines: 3,
                 decoration: InputDecoration(
@@ -126,7 +131,29 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                       );
                       return;
                     }
-                    context.go('/orientation-screen');
+
+                    final age = int.tryParse(ageController.text.trim());
+                    if (age == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Age must be a number')),
+                      );
+                      return;
+                    }
+
+                    final fullName = nameController.text.trim();
+                    final parts = fullName.split(' ');
+                    final firstName = parts.isNotEmpty ? parts.first : fullName;
+                    final lastName =
+                        parts.length > 1 ? parts.sublist(1).join(' ') : '';
+
+                    final updatedUser = _currentUser.copyWith(
+                      firstName: firstName,
+                      lastName: lastName,
+                      age: age,
+                      bio: bioController.text.trim(),
+                    );
+
+                    context.go('/orientation-screen', extra: updatedUser);
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

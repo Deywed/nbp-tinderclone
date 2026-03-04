@@ -8,13 +8,10 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-      items: [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.assignment_add),
-          label: 'Discovery',
-        ),
-        BottomNavigationBarItem(icon: Icon(Icons.play_arrow), label: 'Chats'),
-        BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Profile'),
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Discovery'),
+        BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Matches'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
       currentIndex: customPage,
       onTap: (index) {
@@ -23,7 +20,7 @@ class BottomNavBar extends StatelessWidget {
             context.go('/discovery-screen');
             break;
           case 1:
-            context.go('/chats-screen');
+            context.go('/matches-screen');
             break;
           case 2:
             context.go('/profile-screen');

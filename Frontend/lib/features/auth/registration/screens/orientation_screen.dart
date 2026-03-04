@@ -1,9 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tinderclone/common/user_gender.dart';
+import 'package:tinderclone/common/user_model.dart';
+import 'package:tinderclone/common/user_preferences_model.dart';
 
 class OrientationScreen extends StatefulWidget {
-  const OrientationScreen({super.key});
+  final UserModel? user;
+  const OrientationScreen({super.key, this.user});
 
   @override
   State<OrientationScreen> createState() => _OrientationScreenState();
@@ -18,6 +22,8 @@ class _OrientationScreenState extends State<OrientationScreen> {
 
   final List<String> iAmOptions = ["Man", "Woman", "Other"];
   final List<String> lookingOptions = ["Men", "Women", "Everyone"];
+
+  UserModel get _currentUser => widget.user ?? UserModel();
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +48,6 @@ class _OrientationScreenState extends State<OrientationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ------------------------ I AM ------------------------
               const Text(
                 "I am a",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
@@ -57,7 +62,6 @@ class _OrientationScreenState extends State<OrientationScreen> {
 
               const SizedBox(height: 40),
 
-              // ------------------------ LOOKING FOR ------------------------
               const Text(
                 "I'm looking for",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
@@ -72,7 +76,6 @@ class _OrientationScreenState extends State<OrientationScreen> {
 
               const SizedBox(height: 40),
 
-              // ------------------------ AGE RANGE ------------------------
               const Text(
                 "Preferred age range",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
@@ -109,7 +112,6 @@ class _OrientationScreenState extends State<OrientationScreen> {
 
               const Spacer(),
 
-              // ------------------------ CONTINUE BUTTON ------------------------
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -121,7 +123,16 @@ class _OrientationScreenState extends State<OrientationScreen> {
                     ),
                   ),
                   onPressed: () {
-                    context.go('/interest-screen');
+                    final updatedUser = _currentUser.copyWith(
+                      gender: _mapIAmToGender(iAmIndex),
+                      userPreferences: UserPreferences(
+                        minAgePref: minAge,
+                        maxAgePref: maxAge,
+                        interestedIn: _mapLookingForToGender(lookingForIndex),
+                      ),
+                    );
+
+                    context.go('/interest-screen', extra: updatedUser);
                   },
                   child: const Text(
                     "Continue",
@@ -142,9 +153,28 @@ class _OrientationScreenState extends State<OrientationScreen> {
     );
   }
 
-  // -----------------------------------------------------------
-  // TINDER STYLE SELECTOR
-  // -----------------------------------------------------------
+  UserGender _mapIAmToGender(int index) {
+    switch (index) {
+      case 0:
+        return UserGender.male;
+      case 1:
+        return UserGender.female;
+      default:
+        return UserGender.other;
+    }
+  }
+
+  UserGender _mapLookingForToGender(int index) {
+    switch (index) {
+      case 0:
+        return UserGender.male;
+      case 1:
+        return UserGender.female;
+      default:
+        return UserGender.other;
+    }
+  }
+
   Widget _buildTinderSelector({
     required int selectedIndex,
     required List<String> labels,
@@ -182,9 +212,6 @@ class _OrientationScreenState extends State<OrientationScreen> {
     );
   }
 
-  // -----------------------------------------------------------
-  // AGE PICKER BOTTOM SHEET
-  // -----------------------------------------------------------
   void _openAgePicker() {
     showModalBottomSheet(
       context: context,
@@ -225,13 +252,11 @@ class _OrientationScreenState extends State<OrientationScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        // MIN PICKER
                         _agePicker(
                           initial: tempMin,
                           onChanged: (v) => setModalState(() => tempMin = v),
                         ),
 
-                        // MAX PICKER
                         _agePicker(
                           initial: tempMax,
                           onChanged: (v) => setModalState(() => tempMax = v),
@@ -240,7 +265,6 @@ class _OrientationScreenState extends State<OrientationScreen> {
                     ),
                   ),
 
-                  // DONE BUTTON
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: ElevatedButton(
@@ -273,9 +297,6 @@ class _OrientationScreenState extends State<OrientationScreen> {
     );
   }
 
-  // -----------------------------------------------------------
-  // INDIVIDUAL PICKER
-  // -----------------------------------------------------------
   Widget _agePicker({
     required int initial,
     required ValueChanged<int> onChanged,

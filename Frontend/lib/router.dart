@@ -7,9 +7,13 @@ import 'package:tinderclone/features/auth/registration/screens/interests_screen.
 import 'package:tinderclone/features/auth/registration/screens/orientation_screen.dart';
 import 'package:tinderclone/features/auth/registration/screens/profile_creation_screen.dart';
 import 'package:tinderclone/features/auth/registration/screens/registration_screen.dart';
-import 'package:tinderclone/features/chats/screens/chats_screen.dart';
 import 'package:tinderclone/features/discovery/home/discovery_screen.dart';
+import 'package:tinderclone/features/matches/screens/matches_screen.dart';
 import 'package:tinderclone/features/profile/screens/profile_screen.dart';
+import 'package:tinderclone/features/matches/screens/user_profile_view_screen.dart';
+import 'package:tinderclone/features/profile/screens/edit_profile_screen.dart';
+import 'package:tinderclone/features/stats/screens/stats_screen.dart';
+import 'package:tinderclone/features/top_picks/screens/top_picks_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -33,19 +37,41 @@ class AppRouter {
 
       GoRoute(
         path: '/orientation-screen',
-        builder: (context, state) => OrientationScreen(),
+        builder: (context, state) {
+          final user = state.extra as UserModel?;
+          return OrientationScreen(user: user);
+        },
       ),
       GoRoute(
         path: '/interest-screen',
-        builder: (context, state) => InterestsScreen(),
+        builder: (context, state) {
+          final user = state.extra as UserModel?;
+          return InterestsScreen(user: user);
+        },
       ),
       GoRoute(
-        path: '/orientation-screen',
-        builder: (context, state) => OrientationScreen(),
+        path: '/top-picks-screen',
+        builder: (context, state) => const TopPicksScreen(),
       ),
-      // GoRoute(path: '/registration-screen', builder: (context, state) => RegistrationScreen()),
+      GoRoute(
+        path: '/user-profile-screen',
+        builder: (context, state) {
+          final user = state.extra as UserModel;
+          return UserProfileViewScreen(user: user);
+        },
+      ),
+      GoRoute(
+        path: '/edit-profile-screen',
+        builder: (context, state) {
+          final user = state.extra as UserModel;
+          return EditProfileScreen(user: user);
+        },
+      ),
+      GoRoute(
+        path: '/stats-screen',
+        builder: (context, state) => const StatsScreen(),
+      ),
 
-      // ---- primer za bottom nav bar
       StatefulShellRoute.indexedStack(
         builder:
             (context, state, navigationShell) => Scaffold(
@@ -66,8 +92,8 @@ class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/chats-screen',
-                builder: (context, state) => ChatsScreen(),
+                path: '/matches-screen',
+                builder: (context, state) => const MatchesScreen(),
               ),
             ],
           ),

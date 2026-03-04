@@ -26,7 +26,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           padding: const EdgeInsets.all(24.0),
           child: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
@@ -44,6 +44,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 40),
 
                 TextField(
+                  autocorrect: false,
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
@@ -56,6 +57,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 16),
 
                 TextField(
+                  autocorrect: false,
                   controller: passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
@@ -68,6 +70,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 16),
 
                 TextField(
+                  autocorrect: false,
                   controller: confirmPasswordController,
                   obscureText: true,
                   decoration: InputDecoration(
@@ -118,7 +121,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                     child: const Text(
                       "Create Account",
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
                 ),

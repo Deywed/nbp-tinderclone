@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Backend.Enum;
 using Backend.Models;
 
 namespace Backend.DTOs.User
@@ -14,7 +15,8 @@ namespace Backend.DTOs.User
         string LastName,
         int Age,
         string Bio,
-        UserGender Gender,
-        UserPreferences UserPreferences
+        GenderEnum Gender,
+        UserPreferences UserPreferences,
+        List<string> Interests
     );
 }

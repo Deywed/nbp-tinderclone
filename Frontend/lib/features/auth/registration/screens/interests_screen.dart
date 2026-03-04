@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tinderclone/common/user_model.dart';
+import 'package:tinderclone/core/services/location_service.dart';
+import 'package:tinderclone/features/auth/repository/auth_repository.dart';
 import 'package:tinderclone/features/auth/registration/widgets/interest_chip_widget.dart';
 
 class InterestsScreen extends StatefulWidget {
-  const InterestsScreen({super.key});
+  final UserModel? user;
+  const InterestsScreen({super.key, this.user});
 
   @override
   State<InterestsScreen> createState() => _InterestsScreenState();
 }
 
 class _InterestsScreenState extends State<InterestsScreen> {
+  final AuthRepository _authRepository = AuthRepository();
   final List<String> interests = [
     'Photography',
     'Shopping',
@@ -28,6 +34,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
   ];
 
   final Set<String> selected = {};
+  bool _isRegistering = false;
 
   @override
   Widget build(BuildContext context) {
@@ -96,15 +103,23 @@ class _InterestsScreenState extends State<InterestsScreen> {
                     ),
                   ),
                   onPressed:
-                      selected.isEmpty
+                      selected.isEmpty || _isRegistering
                           ? null
-                          : () {
-                            context.go('/discovery-screen');
-                          },
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
+                          : _handleContinue,
+                  child:
+                      _isRegistering
+                          ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              color: Colors.white,
+                            ),
+                          )
+                          : const Text(
+                            'Continue',
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
                 ),
               ),
 
@@ -132,5 +147,55 @@ class _InterestsScreenState extends State<InterestsScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _handleContinue() async {
+    final user = widget.user;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration data is missing.')),
+      );
+      return;
+    }
+
+    setState(() => _isRegistering = true);
+
+    final userWithInterests = user.copyWith(interests: selected.toList());
+    final success = await _authRepository.register(userWithInterests);
+
+    if (!mounted) return;
+
+    if (!success) {
+      setState(() => _isRegistering = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration failed. Please try again.')),
+      );
+      return;
+    }
+
+    final loginError = await _authRepository.login(
+      userWithInterests.email!,
+      userWithInterests.passwordHash!,
+    );
+
+    if (!mounted) return;
+    setState(() => _isRegistering = false);
+
+    if (loginError != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(loginError)));
+      context.go('/login-screen');
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('current_user_id') ?? '';
+    if (userId.isNotEmpty) {
+      await LocationService().startTracking(userId);
+    }
+
+    if (!mounted) return;
+    context.go('/discovery-screen');
   }
 }

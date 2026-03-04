@@ -1,0 +1,31 @@
+services:
+  neo4j:
+    image: neo4j:latest
+    container_name: tinder-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=none
+    volumes:
+      - ./docker-data/neo4j/data:/data
+
+  mongodb:
+    image: mongo:latest
+    container_name: tinder-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./docker-data/mongodb:/data/db
+    command: mongod --wiredTigerCacheSizeGB 0.5
+    mem_limit: 1g
+
+  redis:
+    image: redis:latest
+    container_name: tinder-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - ./docker-data/redis:/data

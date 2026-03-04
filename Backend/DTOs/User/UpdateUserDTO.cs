@@ -10,14 +10,14 @@ namespace Backend.DTOs.User
 {
     public record UpdateUserDTO
     (
-        string Id,
-        string Email,
-        string Password,
-        string FirstName,
-        string LastName,
-        int Age,
-        string Bio,
-        GenderEnum Gender,
-        UserPreferences UserPreferences
+        string? Email,
+        string? Password,
+        string? FirstName,
+        string? LastName,
+        int? Age,
+        string? Bio,
+        GenderEnum? Gender,
+        UserPreferences? UserPreferences,
+        List<string>? Interests
     );
 }
